@@ -1,21 +1,28 @@
-# Source - https://stackoverflow.com/a/69374234
-# Posted by Murat Büyükaksu
-# Retrieved 2026-04-18, License - CC BY-SA 4.0
+import os
 
-import pip._vendor.requests as requests
+f = open('context.txt', 'r')
 
-def respond(question):
-    return "answer answer answer"
+def respond(incoming):
+    import pip._vendor.requests as requests
 
-MODEL = "qwen3.5:4b"
-OLLAMA = "http://localhost:11434/api/generate"
+    MODEL = "qwen3.5:4b"
+    OLLAMA = "http://localhost:11434/api/generate"
 
-r = requests.post(OLLAMA, json={
-    "model": MODEL,
-    "prompt": "Someone texted me: 'question question question';\
-            you are the one responding to the texts,\
-            reply on my behalf",
-    "stream": False 
-})
+    with open('context.txt', 'r') as file:
+        context = file.read() 
 
-print(r.json()['response'].strip())
+    r = requests.post(OLLAMA, json={
+        "model": MODEL,
+        "prompt": f"Someone texted me: {incoming} and you have this context: {context}",
+        "system": "You are the person responding to this message"
+        "output ONLY the reply text and nothing else."
+        "if you feel unsure about your answers, just say youre not sure"
+        "dont have any emojis, you can use ascii emoticons but only rarely",
+        "stream": False 
+    })
+
+    print(r.json()['response'].strip())
+
+respond("hello, good morning!")
+
+def get_messages(path):

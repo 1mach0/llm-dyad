@@ -11,7 +11,7 @@ import { dirname, join } from "path";
 import { homedir } from "os";
 import { Browsers } from "@whiskeysockets/baileys";
 
-const OMBOX = join(homedir(), "Desktop", "OMBox");
+const OMBOX = join(homedir(), "Messages");
 const INBOX = join(OMBOX, "inbox");
 const OUTBOX = join(OMBOX, "outbox");
 
@@ -43,35 +43,27 @@ async function start() {
   sock.ev.on("creds.update", saveCreds);
 
   let qrCount = 0;
-//   sock.ev.on("connection.update", async ({ connection, lastDisconnect, qr }) => {
-//     if (qr) {
-//       qrCount++;
-//       const small = qrCount % 2 === 1;
-//       console.log("\nScan this QR code with WhatsApp:" + (small ? "" : " (enlarged for compatibility)") + "\n");
-//       console.log(await QRCode.toString(qr, { type: "terminal", small }));
-//     }
-//     if (connection === "open") {
-//       console.log("Connected to WhatsApp!");
-//       pollOutbox();
-//     }
-//     if (connection === "close") {
-//       const code = lastDisconnect?.error?.output?.statusCode;
-//       if (code === DisconnectReason.loggedOut) {
-//         console.log("Logged out. Delete ./auth and restart to re-pair.");
-//         process.exit(1);
-//       }
-//       console.log("Disconnected. Reconnecting in 5s...");
-//       setTimeout(start, 5000);
-//     }
-//   });
-
-    sock.ev.on("connection.update", async (update) => {
-        const {connection, lastDisconnect, qr } = update
-        if (connection == "connecting" || !!qr) { // your choice
-            const code = await sock.requestPairingCode(phoneNumber)
-            // send the pairing code somewhere
-        }
-    })
+  sock.ev.on("connection.update", async ({ connection, lastDisconnect, qr }) => {
+    if (qr) {
+      qrCount++;
+      const small = qrCount % 2 === 1;
+      console.log("\nScan this QR code with WhatsApp:" + (small ? "" : " (enlarged for compatibility)") + "\n");
+      console.log(await QRCode.toString(qr, { type: "terminal", small }));
+    }
+    if (connection === "open") {
+      console.log("Connected to WhatsApp!");
+      pollOutbox();
+    }
+    if (connection === "close") {
+      const code = lastDisconnect?.error?.output?.statusCode;
+      if (code === DisconnectReason.loggedOut) {
+        console.log("Logged out. Delete ./auth and restart to re-pair.");
+        process.exit(1);
+      }
+      console.log("Disconnected. Reconnecting in 5s...");
+      setTimeout(start, 5000);
+    }
+  });
 
   sock.ev.on("messages.upsert", async ({ messages }) => {
     for (const msg of messages) {
